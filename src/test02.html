@@ -1,0 +1,185 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+     <style type="text/css">
+     * {
+         box-sizing: border-box;
+     }
+     html {
+         margin: 0;
+         padding: 0;
+         color: white;
+         background-color: black;
+         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+     }
+     body {
+         margin: 0;
+         padding: 0;
+     }
+     canvas {
+         margin: 6px;
+         border: solid 1px #303030;
+     }
+     </style>
+    <script type="text/javascript" src="js/App3D.js"></script>
+    <script type="text/javascript" src="js/setter.js"></script>
+    <script type="text/javascript">
+        
+        let images = new Array(6);
+        let numLoaded = 0;
+
+        function imageLoaded(e) {
+            numLoaded++;
+            if (numLoaded == 6) {
+                init();
+            }
+        }
+        function loadImages() {
+            let srcs = ["front.png", "back.png", "left.png", "right.png", "top.png", "bottom.png"];
+            for (let i = 0; i < 6; i++) {
+                images[i] = new Image();
+                images[i].src = "images/" + srcs[i];
+                images[i].addEventListener("load", (e) => {
+                    imageLoaded();
+                });
+            }
+        }
+        window.onload = function (e) {
+            loadImages();
+        };
+        
+        function geomPlane (matid, segX, segY) {
+            let ap = [],
+                au = [],
+                ai = [],
+                dx = 1/segX,
+                dy = 1/segY,
+                x0 = -0.5,
+                y0 = -0.5,
+                xi, yi, ui, vi, pt, uv,
+                p1, p2, p3, p4,
+                 r, c;
+            for (r = 0; r <= segY; r++) {
+                yi = dy * r + y0;
+                vi = dy * r;
+                for (c = 0; c <= segX; c++) {
+                    xi = dx * c + x0;
+                    ui = dx * c;
+                    ap.push(App3D.createPoint(xi, yi, 0));
+                    au.push(App3D.createUV(1-ui, vi));
+                }
+            }
+            for (r = 0; r < segY; r++) {
+                for (c = 0; c < segX; c++) {
+                    p1 = r * (segX+1) + c;
+                    p2 = p1 + 1;
+                    p3 = (r + 1) * (segX+1) + c;
+                    p4 = p3 + 1
+                    ai.push(App3D.createIndice(matid, p1, p2, p4));
+                    ai.push(App3D.createIndice(matid, p1, p4, p3));
+                }
+            }
+            return {
+                points : ap,
+                uvs : au,
+                indice : ai
+            };
+        }
+        function createBox (lx, ly, lz, segX, segY, segZ, images) {
+            let front = geomPlane(0, segX, segY);
+            let back = geomPlane(1, segX, segY);
+            let left = geomPlane(2, segZ, segY);
+            let right = geomPlane(3, segZ, segY);
+            let top = geomPlane(4, segX, segZ);
+            let bottom = geomPlane(5, segX, segZ);
+            
+            let P2 = Math.PI / 2;
+
+            App3D.translatePoints(front.points, 0, 0, -0.5);
+           
+            App3D.rotatePointsY(back.points, Math.PI);
+            App3D.translatePoints(back.points, 0, 0, 0.5);
+           
+            App3D.rotatePointsY(left.points, P2);
+            App3D.translatePoints(left.points, -0.5, 0, 0);
+            
+            App3D.rotatePointsY(right.points, -P2);
+            App3D.translatePoints(right.points, 0.5, 0, 0);
+            
+            App3D.rotatePointsX(bottom.points, P2);
+            App3D.translatePoints(bottom.points, 0, 0.5, 0);
+            
+            App3D.rotatePointsX(top.points, -P2);
+            App3D.translatePoints(top.points, 0, -0.5, 0);
+
+            let am = [],
+                ap = [],
+                au = [],
+                ai = [];
+            let addGeom = (o, im) => {
+                App3D.scalePoints(o.uvs, im.width, im.height);
+                let ipt = ap.length;
+                am.push(new TextureMaterial(im));
+                while (o.points.length > 0) {
+                    au.push(o.uvs.shift());
+                    p = o.points.shift();
+                    p[0] *= lx;
+                    p[1] *= ly;
+                    p[2] *= lz;
+                    ap.push(p);
+                }
+                while (o.indice.length > 0) {
+                    let t = o.indice.shift();
+                    t[1] += ipt,
+                    t[2] += ipt,
+                    t[3] += ipt
+                    ai.push(t);
+                    t.length = 0;
+                }
+            };
+            addGeom(front,  images[0]);
+            addGeom(back,   images[1]);
+            addGeom(left,   images[2]);
+            addGeom(right,  images[3]);
+            addGeom(top,    images[4]);
+            addGeom(bottom, images[5]);
+
+            let model = new Model(am, ap, au, ai);
+            
+            return model;
+        }
+        
+        function init() {
+            let cvs = document.getElementById("cvs");
+            cvs.width = window.innerWidth - 20;
+            cvs.height = window.innerHeight - 20;
+
+            let app = new App3D( cvs);
+            
+            let box = createBox(150, 200, 150, 4, 4, 4, images);
+            app.world.appendChild(box);
+            
+            function tick () {
+                window.requestAnimationFrame(tick);
+                app.step();
+                
+            }
+
+            window.requestAnimationFrame(tick);
+
+            window.addEventListener("resize", (e) => {
+                app.resize(window.innerWidth - 18, window.innerHeight - 18);
+            });
+
+            let setter = new App3DSetter();
+        }
+
+        
+    </script>
+ </head>
+ <body>
+ <div>
+ <canvas id="cvs"></canvas>
+ </div>
+ </body>
+ </html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link href="favicon.png" rel="icon" type="image/png" />
+        <title>App3D</title>
+        <style type="text/css">
+            * {
+                box-sizing: border-box;
+            }
+            html {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                color : rgb(0, 0, 0);
+                background-color: rgb(226, 226, 226);
+                margin:0;
+                padding:0;
+            }
+            body {
+                margin:auto;
+                padding: 1em;
+            }
+            header, main, footer {
+                display: block;
+                clear: both;
+            }
+            .center {
+                text-align: center;
+            }
+            #box11, #box12, #box21, #box22 {
+                display: inline-block;
+                vertical-align: top;
+                margin: 0;
+            }
+            #box12, #box22 {
+                float:right;
+            }
+            #box21, #box22 {
+                overflow: auto;
+                border: solid 1px #cccccc;
+            }
+            #box21 {
+                width: 250px;
+                padding: 1em;
+            }
+            #frame {
+                margin:0;
+                padding:1em;
+            }
+        </style>
+        <script type="text/javascript">
+
+            window.onload = function() {
+                const lbox  = document.getElementById("box21");
+                const frame = document.getElementById("frame");
+                function resize(e) {
+                    let wi = window.innerWidth;
+                    if (wi <= 320) {
+                        frame.style.width = 
+                        lbox.style.width = (wi - 20) + "px";
+                    } else {
+                        lbox.style.width = "256px";
+                        frame.style.width = (window.innerWidth - 312) + "px";
+                    }
+                    frame.style.height =
+                    lbox.style.height = (window.innerHeight - 128) + "px";
+                }    
+                resize();
+                window.addEventListener("resize", resize);
+
+                frame.data = "book01.html";
+            };
+        
+        </script>
+    </head>
+    <body>
+        <header>
+			<div>
+				<div id="box11">
+				</div>
+				<div id="box12">
+				</div>
+            </div>
+            </header>
+        <main>
+            <div id="box21">
+                <li><a href="book01.html">Pendahuluan</a></li>
+                    <li>Kordinat</li>
+                    <ul>
+                       <li><a href="book01.html">Kordinat 3D vs Layar</a></li>
+                       <li><a href="book01.html">Pengaruh Kamera</a></li>
+                       <li><a href="book01.html">Penggunaan Matriks</a></li>
+                       <li><a href="book01.html">Matrix Transformasi Kita</a></li>
+                    </ul>
+                    <li>Proyeksi 3D ke 2D</li>
+                    <ul>
+                        <li><a href="book01.html">Ragam Proyeksi</a></li>
+                        <li><a href="book01.html">Matriks Proyeksi Kita</a></li>
+                        <li><a href="book01.html">Viewport</a></li>
+                        <li><a href="book01.html">Matriks Viewport Kita</a></li>
+                    </ul>
+                    <li>Rendering</li>
+                    <ul>
+                        <li><a href="book01.html">Ilusi 3D</a></li>
+                        <li><a href="book01.html">Membuat Triangle</a></li>
+                        <li><a href="book01.html">Proyeksi Gambar / Tekstur</a></li>
+                        <li><a href="book01.html">DistortImage</a></li>
+                    </ul>
+                    <li>Engine 3D Kita</li>
+                    <ul>
+                        <li><a href="book01.html">Types Array</a></li>
+                        <li><a href="book01.html">Node dan Model</a></li>
+                        <li><a href="book01.html">Pemutakhiran Matriks</a></li>
+                        <li><a href="book01.html">Render Data</a></li>
+                        <li><a href="book01.html">Rendering</a></li>
+                    </ul>
+                    <li><a href="book01.html">Kesimpulan</a></li>
+                    <li><a href="book01.html">Unduh</a></li>
+            </div>
+            <div id="box22"><object id="frame"></object></div>
+        </main>
+        <footer class="center">App 3D</footer>
+    </body>
+</html>

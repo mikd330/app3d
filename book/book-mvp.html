@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link type="image/png" rel="icon" href="favicon.png"/>
+        <link type="text/css" rel="stylesheet" href="css/book.css" />
+        <title>App3D</title>
+    </head>
+    <body>
+        <header>
+            <img class="single-img" src="images/mvp1.png" alt="mvp1" />
+        </header>
+        <main>
+            <b>Halaman Terkait:</b>
+            <ul>
+                <li><a href="book-camera.html">Camera</a></li>
+                <li><a href="book-node.html">Node</a></li>
+                <li><a href="book-model.html">Model</a></li>
+                <li><a href="book-rendering.html">Rendering</a></li>
+                <li><a href="book-app3d.html">App3D</a></li>
+            </ul>
+            <h2>Proyeksi (Projection)</h2>
+            <p>Untuk dapat membuat ilusi 3D kita perlu mendapatkan posisi (kordinat) seluruh titik yang diperlukan untuk menggambar di layar komputer setelah ditransformasikan menjadi kordinat relatif ke kamera (camera or eye).</p>
+            <p>Meskipun sebenarnya kita dapat membuat formulasi untuk menghitung secara langsung, tapi cara tersebut menghilangkan peluang untuk secara efektif menerapkan pergerakan relatif sehingga model dapat bergerak sesuai dengan posisi induknya. Kita memerlukan pemisahan posisi asli titik-titik (origin points dengan transformasi, yaitu translasi (translation) atau perubahan posisi, perputaran (rotation) dan skala (scale). Hal itu dimungkinkan dengan rangkaian node dan anak-anaknya (nodes and the children). Perhitungan transformasi bertingkat tersebut tentu harus dioptimalkan karena berkaitan dengan jumlah besar perhitungan. Matrik membantu meringkas prosess perhitungan transformasi.</p>
+            <p>Ada beberapa matriks berbeda yang diperlukan:</p>
+            <ul>
+                <li>Matriks Model untuk menghitung transformasi model, termasuk antar nodes, ke posisi relatif bertingkat hingga ke world atau scene.</li>
+                <li>Matriks View untuk menghitung transformasi posisi relatif ke world menjadi posisi relatif ke kamera.</li>
+                <li>Matriks Proyeksi untuk menghitung posisi relatif ke kamera menjadi posisi relatif ke layar.</li>
+            </ul>
+            <div style="text-align: center;"><img class="single-img" src="images/mvp2.png" alt="mvp2" /></div>
+            <p>Sebagaimana gambar di atas, khususnya pada WebGL dan OpenGL, masih ada satu proses lagi, yaitu mengubah hasil rangkaian proses perkalian tersebut ke kordinat layar komputer.</p>
+            <h3>Left to Right or Right to Left</h3>
+            <p>Ada dua pilihan urutan perhitungan yang menentukan perbedaan matrik, yaitu dari kiri ke kanan (left to roght) atau dari kanan ke kiri.</p>
+            <p>Dari kiri ke kanan adalah proses perkalian matrik mulai dari matriks model ke matriks view hingga ke kordinat layar. Right to left merupakan proses sebaliknya. Kita akan menggunakan yang paling populer, yaitu seperti yang dilakukan WebGL agar mudah dikembangkan.</p>
+            <h3>Penggunaan Matriks</h3>
+            <p>Matriks model normalnya dibangun dengan menyusun matriks-matriks terpisah, yaitu:</p>
+            <ul>
+                <li>Matriks Translasi, untuk perubahan posisi.</li>
+                <li>Matriks Skala, untuk perubahan skala</li>
+                <li><text>matriks Rotasi, yang dipisahkan pula menjadi:</text>
+                    <ul>
+                        <li>rotasi x</li>
+                        <li>rotasi y</li>
+                        <li>rotasi z</li>
+                    </ul>
+                </li>
+            </ul>
+            <p>Kita akan mempermudah dengan membuat fungsi atau metode merangkum translasi, rotasi dan skala sebagaimana skrip salah satu method statik pada App3D berikut:</p>
+            <pre><code>
+
+static composeNodeMatrix(node) {
+    let q = App3D.eulerToQuat(node.rotationX, node.rotationY, node.rotationZ);
+    let x = q[0],
+        y = q[1],
+        z = q[2],
+        w = q[3];
+    let x2 = x + x, y2 = y + y, z2 = z + z;
+    let xx = x * x2, xy = x * y2, xz = x * z2;
+    let yy = y * y2, yz = y * z2, zz = z * z2;
+    let wx = w * x2, wy = w * y2, wz = w * z2;
+    let sx = node.scaleX;
+    let sy = node.scaleY;
+    let sz = node.scaleZ;
+    node.matL[0] = (1 - (yy + zz)) * sx;
+    node.matL[1] = (xy + wz) * sx;
+    node.matL[2] = (xz - wy) * sx;
+    node.matL[3] = 0;
+    node.matL[4] = (xy - wz) * sy;
+    node.matL[5] = (1 - (xx + zz)) * sy;
+    node.matL[6] = (yz + wx) * sy;
+    node.matL[7] = 0;
+    node.matL[8] = (xz + wy) * sz;
+    node.matL[9] = (yz - wx) * sz;
+    node.matL[10] = (1 - (xx + yy)) * sz;
+    node.matL[11] = 0;
+    node.matL[12] = node.x;
+    node.matL[13] = node.y;
+    node.matL[14] = node.z;
+    node.matL[15] = 1;
+    return node.matL;
+}
+
+            </code></pre>
+            <p>Dengan fungsi tersebut kita mengurangi penyusunan dan perkalian matrik translasi, rotasi dan skala menjadi proses di atas.</p>
+            <p>Namun demikian, agar anda mudah memahami, nilai rotasi dalam class Node menggunakan nilai derajat (degree) dan dalam bentuk point (Float32Array dengan 3 unsur). Sebagai konsekuensinya kita perlu mengubah nilai tersebut menjadi nilai inputan matriks di atas melalui fungsi atau metede eulerToQuat. Metode atau fungsi tersebut dipanggil secara otomastis oleh fungsi di atas. Lihat pada baris pertama. adapun skrip fungsi eulerToQuat seperti berikut:</p>
+            <pre><code>
+
+static eulerToQuat(x, y, z, out) {
+    let hr = 0.5 * Math.PI / 180;
+    let rx = x * hr,
+        ry = y * hr,
+        rz = z * hr;
+    let sx = Math.sin(rx),
+        cx = Math.cos(rx),
+        sy = Math.sin(ry),
+        cy = Math.cos(ry),
+        sz = Math.sin(rz),
+        cz = Math.cos(rz);
+    let c = out || new Array(4);
+    c[0] = sx * cy * cz - cx * sy * sz;
+    c[1] = cx * sy * cz + sx * cy * sz;
+    c[2] = cx * cy * sz - sx * sy * cz;
+    c[3] = cx * cy * cz + sx * sy * sz;
+    return c;
+}
+
+            </code></pre>
+            <h3>Perkalian Matriks</h3>
+            <p>Perkalian matriks juga disiapkan sebagai fungsi static App3D sehingga dapat dipanggil dari mana pun.</p>
+            <pre><code>
+
+static multiplyMatrix(out, a, b) {
+    let c = out || Float32Array(16);
+    c[0] = b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12];
+    c[1] = b[0] * a[1] + b[1] * a[5] + b[2] * a[9] + b[3] * a[13];
+    c[2] = b[0] * a[2] + b[1] * a[6] + b[2] * a[10] + b[3] * a[14];
+    c[3] = b[0] * a[3] + b[1] * a[7] + b[2] * a[11] + b[3] * a[15];
+    c[4] = b[4] * a[0] + b[5] * a[4] + b[6] * a[8] + b[7] * a[12];
+    c[5] = b[4] * a[1] + b[5] * a[5] + b[6] * a[9] + b[7] * a[13];
+    c[6] = b[4] * a[2] + b[5] * a[6] + b[6] * a[10] + b[7] * a[14];
+    c[7] = b[4] * a[3] + b[5] * a[7] + b[6] * a[11] + b[7] * a[15];
+    c[8] = b[8] * a[0] + b[9] * a[4] + b[10] * a[8] + b[11] * a[12];
+    c[9] = b[8] * a[1] + b[9] * a[5] + b[10] * a[9] + b[11] * a[13];
+    c[10] = b[8] * a[2] + b[9] * a[6] + b[10] * a[10] + b[11] * a[14];
+    c[11] = b[8] * a[3] + b[9] * a[7] + b[10] * a[11] + b[11] * a[15];
+    c[12] = b[12] * a[0] + b[13] * a[4] + b[14] * a[8] + b[15] * a[12];
+    c[13] = b[12] * a[1] + b[13] * a[5] + b[14] * a[9] + b[15] * a[13];
+    c[14] = b[12] * a[2] + b[13] * a[6] + b[14] * a[10] + b[15] * a[14];
+    c[15] = b[12] * a[3] + b[13] * a[7] + b[14] * a[11] + b[15] * a[15];
+    return c;
+}
+
+            </code></pre>
+
+        <p>Parameter fungsi adalah sebagai berikut:</p>
+        <ul>
+            <li><b>out</b>, untuk menampung hasil perhitungan</li>
+            <li><b>a</b>, adalah matriks yang akan dikalikan dengan matriks kedua (b).</li>
+            <li><b>b</b>, adalah matrik yang kedua.</li>
+        </ul>
+        <h3>Matrix View</h3>
+        <p>Anda dapat melihat matriks view pada pembahasan <a href="book-camera.html">Camera</a> (App3D.updateMatC)</p>
+        <h3>Matriks Proyeksi</h3>
+        <p>Matriks Proyeksi disusun sebagai bagian dari metode App3D dan disimpan dengan nama "matP". Fungsi pemutakhirannya adalah sebagai berikut:</p>
+        <pre><code>
+
+updateMatP() {
+    let asp = this.canvas.width / this.canvas.height,
+        f = 1.0 / Math.tan(this.Fov / 2);
+    this.matP[0] = f / asp;
+    this.matP[5] = f;
+    this.matP[11] = -1;
+    if (this.Far != null && this.Far !== Infinity) {
+        let nf = 1 / (this.Near - this.Far);
+        this.matP[10] = (this.Far + this.Near) * nf;
+        this.matP[14] = (2 * this.Far * this.Near) * nf;
+    } else {
+        this.matP[10] = -1;
+        this.matP[14] = -2 * this.Near;
+    }
+    this.matP[1] = this.matP[2] = this.matP[3] = this.matP[4] = 0;
+    this.matP[6] = this.matP[7] = this.matP[8] = this.matP[9] = 0;
+    this.matP[12] = this.matP[13] = this.matP[15] = 0;
+    this._dirty = true;
+}
+
+        </code></pre>
+        <p>Semua data yang digunakan dalam fungsi tersebut merupakan properties App3D:</p>
+        <ul>
+            <li><b>canvas</b>, untuk menghitung aspect ratio.</li>
+            <li><b>Near</b>, jarak terdekat yang dapat dilihat.</li>
+            <li><b>Far</b>, jarak terjauh yang dapat dilihat</li>
+            <li><b>Fov (Focus of View)</b>, nilai untuk menyesuaikan fokus.</li>
+        </ul>
+        <p>Dampak perubahahan nilai-nilai tersebut, dan juga kamera, dapat anda saksikan pada <a href="../test.html" >test2.html</a>.</p>
+        <h3>matriks Viewport</h3>
+        <p>Tidak seperti WebGL/OpenGL, kita sambungkan proses transformasi secara utuh dengan memasukkan matriks viewport berikut pada rangkaian perkalian matriks:</p>
+        <pre><code>
+
+updateMatVP() {
+    this.matVP[0] = this.matVP[12] = this.canvas.width / 2;
+    this.matVP[5] = this.matVP[13] = this.canvas.height / 2;
+    this._dirty = true;
+}
+
+        </code></pre>
+        <p>perubahan nilai "_dirty" di atas untuk memastikan perkalian matriks vieport (matVP), matriks proyeksi (matP) dan matriks camera (matC) hanya dilakukan bila terjadi perubahan salah satu matriks tersebut.</p>
+        <p>Hasil perkalian ketiga matriks tersebut disimpan App3D dengan nama matG.</p>
+        <p>Dengan matriks-matriks di atas kita dapat melakukan perkalian matris dengan awal matG ke seluruh tingkatan node hingga model yang memiliki titik-titik (points / vertice) yang diperlukan untuk rendering (drawing).</p>
+        <p>Transformasi titik-titik tersebut dilakukan model saat update matriks dengan fungsi sebagai berikut:</p>
+        <pre><code>
+
+updateMore() {
+    if (this.points.length > 0) {
+        this.pointsP.length = 0;
+        this.pointsP = App3D.transformPoints(this.matG, this.points, this.pointsP);
+    }
+}
+
+        </code></pre>
+        <p>Just a joke. Model ternyata memanggil fungsi static yang disediakan App3D berikut:</p>
+        <pre><code>
+
+static transformPoints(m, a, out) {
+    if (!out) out = [];
+    let i, p, w;
+    for (i = 0; i < a.length; i++) {
+        p = a[i];
+        w = m[3] * p[0] + m[7] * p[1] + m[11] * p[2] + m[15];
+        w = w ? 1 / w : 1.0;
+        if (out.length <= i) {
+            out[i] = App3D.createPoint(0, 0, 0);
+        }
+        out[i][0] = (m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12]) * w;
+        out[i][1] = (m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13]) * w;
+        out[i][2] = (m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14]) * w;
+    }
+    return out;
+}
+
+        </code></pre>
+        <p>Take a breath...</p>
+        </main>
+        <footer></footer>
+    </body>
+</html>

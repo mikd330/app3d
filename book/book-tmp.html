@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link type="image/png" rel="icon" href="favicon.png"/>
+        <link type="text/css" rel="stylesheet" href="css/book.css" />
+        <title>App3D</title>
+        <script type="text/javascript" src="js/book01.js"></script>
+    </head>
+    <body>
+        <header>
+            <canvas id="cvs" width="600" height="400"></canvas>
+        </header>
+        <main>
+            <h2>Seri Memahami 3D Engine</h2>
+            <h3>Bagian I</h3>
+            <p>
+                Paragraf 1
+            </p>
+            <div>
+                <h2>Code</h2>
+                <pre>
+                    <code>
+
+class Model extends Node {
+    constructor(mat, ap, au, ai) {
+        super();
+        this.doubleSide = false;
+        this.isModel = true;
+        this.indice = ai || [];
+        this.materials = mat || [];
+        this.points = ap || [];
+        this.pointsP = [];
+        this.uvs = au || [];
+        if (this.points.length > 0) {
+            for (let i = 0; i < this.points.length; i++) {
+                this.pointsP.push(App3D.createPoint(0, 0, 0));
+            }
+        }
+    }
+    addIndice(m, a, b, c) {
+        this.indice.push(App3D.createIndice(m, a, b, c));
+    }
+    addPoint(x, y, z) {
+        this.points.push(App3D.createPoint(x, y, z));
+        this.pointsP.push(App3D.createPoint(0, 0, 0));
+    }
+    addUV(u, v) {
+        this.uvs.push(App3D.createUV(u, v));
+    }
+    clone() {
+        let am = App3D.copyArray(this.materials);
+        let ap = App3D.copyArrayPoint(this.points);
+        let au = App3D.copyArrayUV(this.uvs);
+        let ai = App3D.copyArrayIndice(this.indice);
+        let mo = new Model(am, ap, au, ai);
+        mo.doubleSide = this.doubleSide;
+        return mo;
+    }
+    collectRenderData(collection) {
+        let ap = this.pointsP,
+            au = this.uvs,
+            ai = this.indice,
+            am = this.materials,
+            ds = this.doubleSide;
+        for (let i = 0; i < ai.length; i++) {
+            let t = ai[i];
+            if (ds || App3D.cullTriangle(ap[t[1]], ap[t[2]], ap[t[3]])) {
+                collection.push([
+                    am[t[0]].image,
+                    ap[t[1]], ap[t[2]], ap[t[3]],
+                    au[t[1]], au[t[2]], au[t[3]]
+                ]);
+            }
+        }
+        if (this.children.length > 0) {
+            for (let i = 0; i < this.children.length; i++) {
+                this.children[i].collectRenderData(collection);
+            }
+        }
+    }
+    updateMore() {
+        if (this.points.length > 0) {
+            this.pointsP.length = 0;
+            this.pointsP = App3D.transformPoints(this.matG, this.points, this.pointsP);
+        }
+    }
+}
+
+                        
+                    </code>
+                </pre>
+            </div>
+        </main>
+        <footer></footer>
+    </body>
+</html>

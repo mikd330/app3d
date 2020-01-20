@@ -1,0 +1,180 @@
+ <!DOCTYPE html>
+ <html>
+ <head>
+     <style type="text/css">
+     * {
+         box-sizing: border-box;
+     }
+     html {
+         margin: 0;
+         padding: 0;
+         color: white;
+         background-color: black;
+     }
+     body {
+         margin: 0;
+         padding: 0;
+     }
+     canvas {
+         margin: 6px;
+         border: solid 1px #303030;
+     }
+     </style>
+	 <!-- =<script type="text/javascript" src="images/myimage.js"></script> -->
+    <script type="text/javascript" src="js/App3D.js"></script>
+    <script type="text/javascript">
+        
+        function createPlane (tex, w, h) {
+            let model = new Model();
+            model.materials[0] = tex;
+            let w2 = w/2.
+                h2 = h / 2;
+            
+            model.addPoint(-w2, -h2, 0), 
+            model.addPoint(0, -h2, 0),
+            model.addPoint(w2, -h2, 0),
+            model.addPoint(-w2, 0, 0),
+            model.addPoint(0, 0, 0),
+            model.addPoint(w2, 0, 0),
+            model.addPoint(-w2, h2, 0),
+            model.addPoint(0, h2, 0),
+            model.addPoint(w2, h2, 0)
+            
+            let tw = tex.image.width,
+                th = tex.image.height;
+            w2 = tw / 2;
+            h2 = th / 2;
+           
+            model.addUV(tw, 0);
+            model.addUV(w2, 0);
+            model.addUV(0, 0);
+            model.addUV(tw, h2);
+            model.addUV(w2, h2);
+            model.addUV(0, h2);
+            model.addUV(tw, th);
+            model.addUV(w2, th);
+            model.addUV(0, th);
+            
+            model.addIndice(0, 0, 1, 4);
+            model.addIndice(0, 0, 4, 3);
+            model.addIndice(0, 1, 5, 4);
+            model.addIndice(0, 1, 2, 5);
+            model.addIndice(0, 3, 7, 6);
+            model.addIndice(0, 3, 4, 7);
+            model.addIndice(0, 4, 8, 7);
+            model.addIndice(0, 4, 5, 8);
+            
+            return model;
+        }
+        function createBox(tex, xl, yl, zl) {
+            const P2 = Math.PI / 2,
+                  X2 = xl / 2,
+                  Y2 = yl / 2,
+                  Z2 = zl / 2;
+            let top = createPlane(tex, xl, zl);
+            App3D.rotatePointsX (top.points, -P2);
+            App3D.translatePoints(top.points, 0, -Y2, 0);
+            
+            let bot = createPlane(tex, xl, zl);
+            App3D.rotatePointsX (bot.points, P2);
+            App3D.translatePoints(bot.points, 0, Y2, 0);
+
+            let lef = createPlane(tex, zl, yl);
+            App3D.rotatePointsY (lef.points, P2);
+            App3D.translatePoints(lef.points, -X2, 0, 0);
+
+            let rig = createPlane(tex, zl, yl);
+            App3D.rotatePointsY (rig.points, -P2);
+            App3D.translatePoints(rig.points, X2, 0, 0);
+
+            let fro = createPlane(tex, xl, yl);
+            App3D.translatePoints(fro.points, 0, 0, -Z2);
+
+            let bac = createPlane(tex, xl, yl);
+            App3D.rotatePointsY (bac.points, Math.PI);
+            App3D.translatePoints(bac.points, 0, 0, Z2);
+
+            let node = new Node();
+            node.appendChild(bot);
+            node.appendChild(bac);
+            node.appendChild(lef);
+            node.appendChild(rig);
+            node.appendChild(top);
+            node.appendChild(fro);
+            
+            node.rotationX = 30;
+            return node;
+        }
+        
+        function start(myimg) {
+            let cvs = document.getElementById("cvs");
+            cvs.width = window.innerWidth - 20;
+            cvs.height = window.innerHeight - 20;
+
+            let app = new App3D( cvs);
+
+            let tex = App3D.createTexture(myimg);
+            
+            let myNode = new Node();
+            myNode.translate(200, 0, 100);
+            app.world.appendChild(myNode);
+
+            let pln1 = createPlane(tex, 150, 100);
+            pln1.doubleSide = true;
+            let pln2 = pln1.clone();
+            pln1.translate(0, 0, -100);
+            pln2.translate(0, 0, 50);
+            myNode.appendChild(pln1);
+            myNode.appendChild(pln2);
+            
+            let box = createBox(tex, 200, 200, 100);
+            app.world.appendChild(box);
+            
+            var frames = 2;
+            var frameS = 2;
+
+            function updateBox () {
+                if (frames >= 60 || frames <= 1) {
+                    frameS *= -1;
+                }
+                frames += frameS;
+                let s = (frames - 30 ) / 30 + 1;
+                box.scaleZ = s;
+                box.rotate(0, 2, 0);
+            }
+
+            function tick () {
+                myNode.rotate (0, -2, 0);
+                updateBox();
+                app.step();
+                window.requestAnimationFrame(tick);
+            }
+
+            window.requestAnimationFrame(tick);
+
+            window.addEventListener("resize", (e) => {
+                app.resize(window.innerWidth - 18, window.innerHeight - 18);
+            });
+        }
+
+        window.onload = function (e) {
+            let myimg = new Image();
+            myimg.src = "images/myimage.jpg";
+            myimg.addEventListener("load", (e) => {
+                start (myimg);
+            });
+			start (myimg);
+			// testing base64:
+			/*
+			let i = getMyImage();
+			start(i);
+			*/
+        };
+    </script>
+ </head>
+ <body>
+ <div>
+ <canvas id="cvs"></canvas>
+ </div>
+ </body>
+ </html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link type="image/png" rel="icon" href="favicon.png"/>
+        <link type="text/css" rel="stylesheet" href="css/book.css" />
+        <script type="text/javascript" src="js/book01.js"></script>
+    </head>
+    <body>
+        <header>
+            <canvas id="cvs" width="300" height="300"></canvas>
+        </header>
+        <main>
+            <h2>Seri Memahami 3D Engine</h2>
+            <p></p>
+            <h3>Engine 3D</h3>
+            <p>Engine 3D merupakan perangkat lunak (sofware) untuk menampilkan model 3D ke layar. Jika anda browsing di di dunia maya, akan banyak sekali anda temui contoh-contohnya. Sayangnya, umumnya demikian kompleks sehingga sulit bagi pemula untuk dapat memahami cara kerjanya secara cepat. Untuk memudahkan anda dalam memahaminya, saya sajikan contoh Engine 3D sederhana dan dengan menggunakan javascript sehingga perhatian anda tidak terpecah pada kompilasi dan SDK (development kit). Javascript tingga anda panggil dari html dan browser mengkompilasinya bila perlu.</p>
+            <h3>Efek 3D</h3>
+            <p>Ilusi 3 Dimensi yang disajikan di layar pada umumnya memanfaatkan distorsi image (gambar) yang dapat dioptimalisasi dengan segitiga (triangle) untuk menghasilkan ilusi 3 dimensi.</p>
+            <p>Triangle memberi kita kemudahan untuk memperoleh tiga titik (point) yang dapat dijadikan dasar untuk memiringkan (shearing). Jarak atau posisi z triangle memberi kita informasi untuk menghitung skala.</p>
+            <p>Berikut menrupakan contoh bagaimana hal tersebut dapat terjadi.</p>
+            <h3>Topik Bahasan</h3>
+            <p>Kita akan membuat satu Engine 3D yang cukup lengkap untuk menampilkan obyek 3D akan tetapi tetap sederhana sehingga mudah dipahami. Pembahasan akan dilakukan bertahap, meskipun anda dapat lompat sesuka anda, dengan topik utama sebagai berikut:</p>
+            <ol>
+                <li><bold>Transformasi dan Proyeksi</bold>. Berkaitan dengan perubahan perhitungan posisi relatif antara titik dengan induknya (node) yang bertingkat-tingkat hingga ke kamera.</li>
+                <li><bold>rendering</bold>, yaitu penempatan hasil proyeksi ke kordinat layar, termasuk penggunaan gambar sebagai tekstur.</li>
+            </ol>
+            <p>Selanjutnya silahkan menelusuri menu yang ada di samping.</p>
+        </main>
+        <footer></footer>
+    </body>
+</html>

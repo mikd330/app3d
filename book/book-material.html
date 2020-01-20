@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link type="image/png" rel="icon" href="favicon.png"/>
+        <link type="text/css" rel="stylesheet" href="css/book.css" />
+        <title>App3D</title>
+        <script type="text/javascript">
+            class Organic {
+                constructor (group_name) {
+                    this.group = group_name;
+                }
+            }
+            class Animal extends Organic {
+                constructor(species_name) {
+                    super ("animal");
+                    this.species = species_name;
+                    this._words  = ["I am", "my species is"];
+                }
+                get firstWord() {
+                    return this._words[0];
+                }
+                set firstWord (text) {
+                    this._words[0] = text;
+                }
+                get secondWord() {
+                    return this._words[1];
+                }
+                set secondWord (text) {
+                    this._words[1] = text;
+                }
+                whatAreYou () {
+                    return this._words[0] + " " + this.group + " " + this._words[1] + " " + this.species;
+                }
+            }
+            window.addEventListener("load", (e) => {
+                let tryit = document.getElementById("try-it");
+                tryit.addEventListener("click", (e) => {
+                    let dog = new Animal("DOG");
+                    dog.firstWord = "Saya termasuk";
+                    let s1 = dog.firstWord;
+                    let s2 = dog.secondWord;
+                    let s3 = dog.whatAreYou();
+                    let s = "First word : " + s1;
+                    s += "\nSecond word : " + s2;
+                    s += "\n\nDo'i ngomong : '" + s3 + "'";
+                    alert (s);
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <header></header>
+        <main>
+            <span>Seri Memahami 3D Engine</span>
+            <h1>MATERIAL</h1>
+            <p>Material merupakan obyek (class) yang digunakan untuk menyimpan data warna atau tekstur dan melakukan proses terkait sesuai keperluan.</p>
+            <p>Kali ini kita gunakan metode paling sederhana sehingga skripnya cukup sebagai berikut:</p>
+            <div>
+                <h2>Skrip Material</h2>
+                <pre>
+                    <code>
+
+class ColorMaterial {
+    constructor(bg, bordercolor, borderwidth) {
+        this.backgroundColor = bg;
+        this.borderColor = bordercolor;
+        this.borderWidth = borderwidth;
+    }
+}
+
+class TextureMaterial {
+    constructor(img) {
+        this.image = img;
+    }
+}
+
+                    </code>
+                </pre>
+            </div>
+            <h3>ColorMaterial</h3>
+            <ul>
+                <li><b>backgroundColor</b>, untuk warna latar.</li>
+                <li><b>borderColor</b>, untuk warna garis tepian.</li>
+                <li><b>borderWidth</b>, untuk ketebalan garis tepian.</li>
+            </ul>
+            <h3>TextureMaterial</h3>
+            <p>Hanya memuat data image, karena di CanvasRendering2d kita hanya butuh itu.</p>
+            <p>Lebih menyenangkan lagi, kita tidak perlu membuat Getters and Setters maupun methods.</p>
+            <h3>Sedikit Mengenai Class</h3>
+            <p>Class adalah obyek yang kita bentuk untuk menyimpan data dan melaukan sesuatu dengan keunikannya, seperti individu organik. Class dapat pula dikembangkan turunannya sebagaimana di biologi ada sepecies, ordo dan seterusnya.</p>
+            <p>Di atas, merupakan contoh class yang hanya memiliki konstruktor. Secara lengkap, kelas dapat memiliki:</p>
+            <ul>
+                <li><b>Property</b>, yaitu data yang disimpan di kelas tersebut.</li>
+                <li><b>Getters dan Setters</b>, yang sering dimasukkan sebagai bagian dari property karena merupakan cara mengubah property yang penggunaannya sama dengan cara biasa mengubah property.</li>
+                <li><b>Methods</b>, yaitu fungsi atau prosedur yang dapat dilakukan oleh kelas tersebut.</li>
+            </ul>
+            <p>Berikut contoh class sederhana tapi memiliki unsur yang lengkap:</p>
+<pre><code>
+
+class Organic {
+
+    constructor (group_name) {
+
+        this.group = group_name;
+
+    }
+}
+
+// Kita dapat membiat turunannya dengan deklarasi extends, misalnya:
+
+class Animal extends Organic {
+
+    constructor(species_name) {
+        /*
+        * Memanggil constructor induk sehingga nama group "animal" tersimpan
+        * dan semua property maupun method di induk menjadi bagian anak, 
+        * kecuali jika diubah kemudian:
+        */
+        super ("animal");
+        // Tambahan property baru:
+
+        this.species = species_name;
+        this._words   = ["I am", "my species is"];
+
+    }
+    // Getter and Setter:
+    get firstWord() {
+        return this._words[0];
+    }
+    set firstWord (text) {
+        this._words[0] = text;
+    }
+    get secondWord() {
+        return this._words[1];
+    }
+    set secondWord (text) {
+        this._words[1] = text;
+    }
+    // Method:
+    whatAreYou () {
+        return this._words[0] + " " + this.group + " " + this._words[1] + " " + this.species;
+    }
+}
+
+// sehingga kita dapat membuat obyek baru dan memanfaatkannya sebagai berikut: 
+
+window.addEventListener("load", (e) => {
+
+    let dog = new Animal("DOG");
+    dog.firstWord = "Saya termasuk";
+
+    let s1 = dog.firstWord;
+    let s2 = dog.secondWord;
+    let s3 = dog.whatAreYou();
+
+    let s = "First word : " + s1;
+    s += "\nSecond word : " + s2;
+    s += "\n\nDo'i ngomong : '" + s3 + "'";
+    
+    alert (s);
+});
+
+</code></pre>
+
+<p><button id="try-it" type="button">TRY IT</button></p>
+<p>Gampang banget yak ?</p>
+        </main>
+        <footer></footer>
+    </body>
+</html>

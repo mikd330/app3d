@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link type="image/png" rel="icon" href="favicon.png"/>
+        <link type="text/css" rel="stylesheet" href="css/book.css" />
+        <title>App3D</title>
+        <script type="text/javascript" src="js/book01.js"></script>
+    </head>
+    <body>
+        <header>
+            <canvas id="cvs" width="600" height="400"></canvas>
+        </header>
+        <main>
+            <span>Seri Memahami 3D Engine</span>
+            <h1>KAMERA</h1>
+            <p>Hal Terkait:</p>
+            <ul>
+                <li><a href="book-mvp.html">Proyeksi</a></li>
+                <li><a>Node</a></li>
+                <li><a>App3D</a></li>
+            </ul>
+            <p>Kamera mewakili mata yang melihat layar komputer sehingga perlu memiliki properties:</p>
+            <ul>
+                <li><b>pos</b>, yaitu posisi kamera (x, y, z)</li>
+                <li><b>tgt</b>, yaitu posisi obyek yang dilihat kamera.</li>
+                <li><b>up</b>, yaitu gelengan kepala, ke atas (y), ke samping (x), dan putaran (z).</li>
+            </ul>
+            <p>Baik posisi kamera (pos) maupun tar mudah,getnya (tgt) adalah posisi relatif ke node pertama, yaitu world pada class App3D (yang akan kita bahas kemudian).</p>
+            <p>"up atau head", - baik x, y maupun z - memiliki nilai 1 atau 0.</p>
+            <p>Kali ini kita tidak membuat class untuk posisi tapi memanfaatkan Float32Array agar kelak mudah ditransfer ke GPU (graphics proccessing unit) bila ingin dikembangkan ke WebGL dan cepat prosesnya. Pembuatannya difasilitasi oleh class App3D melalui metode createPoint.</p>
+            <p>Class Camera kita buat sebagai berikut:</p>
+            <div>
+                <h2>Skrip Camera</h2>
+                <pre>
+                    <code>
+
+class Camera {
+    constructor() {
+        this.pos = App3D.createPoint(0, 0, -600);
+        this.tgt = App3D.createPoint(0, 0, 0);
+        this.up = App3D.createPoint(0, 1, 0);
+        this.dirty = true;
+    }
+    get x() { return this.pos[0]; }
+    get y() { return this.pos[1]; }
+    get z() { return this.pos[2]; }
+    set x(n) { this.pos[0] = n; this.dirty = true; }
+    set y(n) { this.pos[1] = n; this.dirty = true; }
+    set z(n) { this.pos[2] = n; this.dirty = true; }
+    setPosition(x, y, z) {
+        this.pos[0] = x;
+        this.pos[1] = y;
+        this.pos[2] = z;
+        this.dirty = true;
+    }
+    get targetX() { return this.tgt[0]; }
+    get targetY() { return this.tgt[1]; }
+    get targetZ() { return this.tgt[2]; }
+    set targetX(n) { this.tgt[0] = n; this.dirty = true; }
+    set targetY(n) { this.tgt[1] = n; this.dirty = true; }
+    set targetZ(n) { this.tgt[2] = n; this.dirty = true; }
+    setTarget(x, y, z) {
+        this.dirty = true;
+        this.tgt[0] = x;
+        this.tgt[1] = y;
+        this.tgt[2] = z;
+    }
+    get upX() { return this.up[0]; }
+    get upY() { return this.up[1]; }
+    get upZ() { return this.up[2]; }
+    set upX(n) { this.up[0] = n; this.dirty = true; }
+    set updY(n) { this.up[1] = n; this.dirty = true; }
+    set upZ(n) { this.up[2] = n; this.dirty = true; }
+    setUps(x, y, z) {
+        this.dirty = true;
+        this.up[0] = x;
+        this.up[1] = y;
+        this.up[2] = z;
+    }
+    get headX() { return this.up[0]; }
+    get headY() { return this.up[1]; }
+    get headZ() { return this.up[2]; }
+    set headX(n) { this.up[0] = n; this.dirty = true; }
+    set headY(n) { this.up[1] = n; this.dirty = true; }
+    set headZ(n) { this.up[2] = n; this.dirty = true; }
+    setHead(x, y, z) {
+        this.dirty = true;
+        this.up[0] = x;
+        this.up[1] = y;
+        this.up[2] = z;
+    }
+    translate(x, y, z) {
+        this.dirty = true;
+        this.pos[0] += x;
+        this.pos[1] += y;
+        this.pos[2] += z;
+    }
+}
+
+                    </code>
+                </pre>
+            </div>
+            <h3>constructor</h3>
+            <p><b>pos</b>. Posisi camera - di (relatif terhadap) world.</p>
+            <p><b>tgt</b>. Posisi target atau obyek yang dilihat camera - di (relatif terhadap) world.</p>
+            <p><b>up</b>. Putaran kamera.</p>
+            <p><b>dirty</b>. Tanda apakah terjadi perubahan. Supaya hemat komputasi, pemutakhiran (updating) matriks kamera hanya dilakukan bila ada perubahan atau dirty nilainya true.</p>
+            <h3>Getters and Setters</h3>
+            <p>Getters dan Setters kita manfaatkan untuk memastikan dirty bernilai true jika terjadi perubahan.</p>
+            <p>"up" kita beri alias head untuk mengakomodasi varian nama agar mudah diintegrasikan dengan modul lain.</p>
+            <h3>Methods</h3>
+            <p>Hanya ada satu method yaitu translate untuk memindahkan kamera dengan jarak (delta) tertentu.</p>
+            <h3>Matriks Kamera</h3>
+            <p>Matriks kamera dan pemutakhirannya, kali ini kita tempatkan di App3D.js:</p>
+            <ul>
+                <li><b>App3D.matC</b>, untuk matriks kamera,</li>
+                <li><b>App3D.updateMatC</b>, sebagai metode pemutakhirannya.</li>
+            </ul>
+            <p><b>Skrip Pemutakhiran Matriks Kamera pada App3D.js sebagai berikut:</b></p>
+            <pre><code>
+
+updateMatC() {
+    let z0 = this.cam.x - this.cam.targetX,
+        z1 = this.cam.y - this.cam.targetY,
+        z2 = this.cam.z - this.cam.targetZ;
+    let len = z0 * z0 + z1 * z1 + z2 * z2;
+    if (len > 0) {
+        len = 1 / Math.sqrt(len);
+        z0 *= len;
+        z1 *= len;
+        z2 *= len;
+    }
+    let x0 = this.cam.upY * z2 - this.cam.upZ * z1,
+        x1 = this.cam.upZ * z0 - this.cam.upX * z2,
+        x2 = this.cam.upX * z1 - this.cam.upY * z0;
+    len = x0 * x0 + x1 * x1 + x2 * x2;
+    if (len > 0) {
+        len = 1 / Math.sqrt(len);
+        x0 *= len;
+        x1 *= len;
+        x2 *= len;
+    }
+    this.matC[0] = x0;
+    this.matC[1] = x1;
+    this.matC[2] = x2;
+    this.matC[3] = 0;
+    this.matC[4] = z1 * x2 - z2 * x1;
+    this.matC[5] = z2 * x0 - z0 * x2;
+    this.matC[6] = z0 * x1 - z1 * x0;
+    this.matC[7] = 0;
+    this.matC[8] = z0;
+    this.matC[9] = z1;
+    this.matC[10] = z2;
+    this.matC[11] = 0;
+    this.matC[12] = this.cam.x;
+    this.matC[13] = this.cam.y;
+    this.matC[14] = this.cam.z;
+    this.matC[15] = 1;
+    this.cam.dirty = false;
+}
+
+            </code></pre>
+            <p>"this.cam pada method di atas adalah obyek kamera yang dibentuk dengan:</p>
+            <p>this.cam = new Camera();</p>
+            <p>Fungsi dari matriks yang disusun dengan cara di atas adalah untuk mengubah (transform) posisi relatif terhadap world ke posisi relatif terhadap kamera sesuai pandangan mata kamera.</p>
+            
+        </main>
+        <footer></footer>
+    </body>
+</html>

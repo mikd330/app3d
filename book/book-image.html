@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link href="../favicon.png" rel="icon" type="image/png" />
+        <title>App3D</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            html {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                color : rgb(0, 0, 0);
+                background-color: rgb(226, 226, 226);
+                margin:0;
+                padding:0;
+            }
+            body {
+                margin:auto;
+                padding: 32px;
+                width: 664px;
+            }
+            canvas {
+                border : solid 1px rgb(182, 182, 182);
+            }
+        </style>
+        <script type="text/javascript" src="js/DistortImage.js"></script>
+    </head>
+    <body>
+        <header>
+            <canvas id="cvs" width="600" height="400"></canvas>
+        </header>
+        <main>
+            
+            <h3>Class</h3>
+            <p>OOP (Object Oriented Programming style) murni digunakan dalam contoh ini meskipun browser masing masih akan mengkompilasinya menjadi model prototype. Semoga tak lama lagi, penerapan OOP (typed script) dimanfaatkan browser untuk meningkatkan kinerja (performance) karena lebih mudah dikompilasi ke bahasa asli (native).</p>
+            <p>Javascript, mulai sejak standar ECMA 2015 (ES-6) memperkenalkan class sehingga kita dapat menyajikan penulisan program (scripting) obyek yang mudah dipahami.</p>
+            <p>Class adalah suatu obyek yang memiliki property (variables) dan metode (method / function). Keberadaan class membuat kita dapat menerapkan gaya OOP dengan sempurna. Class dapat dikembangkan (extends) menjadi kelas-kelas turunan (inheritance) lain, seperti kelas binatang menjadi kuda, lalu menjadi kuda kecil dan kuda besar. Masing-masing memiliki karakteristik, prilaku dan kemampuan yang spesifik.</p>
+            <h3>Contoh Class</h3>
+            <p>Berikut contoh class yang kita gunakan:</p>
+            <code>
+                class Point {
+                    constructor(x, y) {
+                        this.x = x || 0.0;
+                        this.y = y || 0.0;
+                        this.z = 0;
+                    }
+                }
+                class UV {
+                    constructor(u, v) {
+                        this.u = u;
+                        this.v = v;
+                    }
+                }
+                class Triangle {
+                    /**
+                     * 
+                     * @param {Point} p0  First point of coordinate in triangle
+                     * @param {Point} p1  Second point of coordinate in triangle
+                     * @param {Point} p2  Third point of coordinate in triangle
+                     * @param {UV} uv0  First texture coordinate
+                     * @param {UV} uv1  Second texture coordinate
+                     * @param {UV} uv2  Third texture coordinate
+                     */
+                    constructor(p0, p1, p2, uv0, uv1, uv2) {
+                        this.points = [p0, p1, p2];
+                        this.uvs = [uv0, uv1, uv2];
+                    }
+                    get z() {
+                        return ((this.points[0].z + this.points[1].z + this.points[2].z) / 3);
+                    }
+                }
+                class Circle {
+                    /**
+                     * 
+                     * @param {number} x position x
+                     * @param {number} y position y
+                     * @param {number} r radius of the circle
+                     */
+                    constructor(x, y, r) {
+                        this.x = x;
+                        this.y = y;
+                        this.radius = r || 8;
+                    }
+                }
+            </code>
+        </main>
+        <footer></footer>
+    </body>
+</html>
