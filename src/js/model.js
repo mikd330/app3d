@@ -1,29 +1,13 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link type="image/png" rel="icon" href="favicon.png"/>
-        <link type="text/css" rel="stylesheet" href="css/book.css" />
-        <title>App3D</title>
-    </head>
-    <body>
-        <header>
-            <canvas id="cvs" width="600" height="400"></canvas>
-        </header>
-        <main>
-            <span>Seri Memahami 3D Engine</span>
-            <h1>Model</h1>
-            <p>
-                Paragraf 1
-            </p>
-            <div>
-                <h2>Skrip Node</h2>
-            </div>
-            <pre><code>
-
+/**
+ * Class Model
+ * @property {Boolean} doubleSide Sign for culling
+ * @property {Array} indice Index of Points.
+ * @property {Array} materials
+ * @property {Array} points Array of origin points.
+ * @property {Array} pointsP Array of projected points.
+ * @property {Array} uvs Array of UV.
+ */
 class Model extends Node {
-
     constructor(mat, ap, au, ai) {
         super();
         this.doubleSide = false;
@@ -40,15 +24,30 @@ class Model extends Node {
         }
     }
     /**
-    * Create and add Indice
-    */
+     * Create and Add idice of a triangle's points and save it to this.indice 
+     * @param {Integer} m Index of Material
+     * @param {Integer} a Index of Point 1
+     * @param {Integer} b Index of Point 2
+     * @param {Integer} c Index of Point 3
+     */
     addIndice(m, a, b, c) {
         this.indice.push(App3D.createIndice(m, a, b, c));
     }
+    /**
+     * Create and Add a point to this.points
+     * @param {Float} x Coordinate x
+     * @param {Float} y Coordinate y
+     * @param {Float} z Coordinate z
+     */
     addPoint(x, y, z) {
         this.points.push(App3D.createPoint(x, y, z));
         this.pointsP.push(App3D.createPoint(0, 0, 0));
     }
+    /**
+     * Create and Add uv to this, uvs
+     * @param {Float} u Horizontal position in texture / image
+     * @param {Float} v Verticalal position in texture / image
+     */
     addUV(u, v) {
         this.uvs.push(App3D.createUV(u, v));
     }
@@ -62,10 +61,9 @@ class Model extends Node {
         return mo;
     }
     /**
-    * Serve renderer by cascading render cata collecting
-    * Collect image projected points and uvs for every triangle
-    * as an Array.
-    */
+     * @override Node.collectRenderData
+     * @param {Array} collection
+     */
     collectRenderData(collection) {
         let ap = this.pointsP,
             au = this.uvs,
@@ -89,9 +87,8 @@ class Model extends Node {
         }
     }
     /**
-    * Updating this.points and save it to this.pointsP
-    * by calling App3D.transformPoints
-    */
+     * Project this.points and save it to this.pointsP
+     */
     updateMore() {
         if (this.points.length > 0) {
             this.pointsP.length = 0;
@@ -99,13 +96,3 @@ class Model extends Node {
         }
     }
 }
-            </code></pre>
-            <h3>Getters and Setters</h3>
-            <p></p>
-            <h3>Methods</h3>
-
-            <p></p>
-        </main>
-        <footer></footer>
-    </body>
-</html>

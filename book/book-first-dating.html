@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link type="image/png" rel="icon" href="favicon.png"/>
+        <link type="text/css" rel="stylesheet" href="css/book.css" />
+        <script type="text/javascript" src="js/first-dating.js"></script>
+    </head>
+    <body>
+        <header>
+            <canvas id="cvs" width="300" height="300"></canvas>
+        </header>
+        <main>
+            <h2>Better First Dating With 3D</h2>
+            <p>Here I want to give you best dating to 3D before you want to develop a 3D Engine. I also made a more complete 3D for the second meeting <a href="book-app.html"> here .</a></p>
+            
+            <h3>The Script</h3>
+            <p>3D illussion actually created by modifying x and y position at screen by scalling them by it's z depth.</p>
+            <p>The formulation can be generated like this: 1 - 1 divided by maximum distance.</p>
+            
+            <h3>Constructor</h3>
+            <p>I have constructed a class like this:</p>
+
+            <pre><code>
+/**
+* The class name is Lesson1
+*/
+class Lesson1 {
+    /**
+    * @param {Canvas} cvs
+    */
+    constructor(cvs) {
+        // Get canvas and create CanvasRenderingContext2d:
+        this.cvs = cvs;
+        this.ctx = cvs.getContext("2d");
+        /*
+        Points in a box:
+
+            4 ------ 5
+            / |      / |
+        0 ------ 1  |
+        |  |     |  |
+        |  7 ----|- 6
+        |/       | /
+        3 ------ 2
+        */
+        // We can reccord the points as Float32Array:
+        // Every 3 numberss, represent position x, y and z: for points 0 to 7:
+        this.apo = new Float32Array([-0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5]);
+        
+        // This is to save the projected points:
+        this.apt = new Float32Array(this.apo.length);
+        
+        // The coordinate map for faces (box's sides):
+        // Every 4 numbers, represent indice of 4 points of a face (box'side):
+        this.afc = new Float32Array([0, 1, 2, 3, 1, 5, 6, 2, 5, 4, 7, 6, 4, 0, 3, 7, 3, 2, 6, 7, 4, 5, 1, 0]);
+
+        // Just array of colors:
+        this.colors = ["#ff0000", "#ffff00", "#00ffaa", "#0077ff", "#0000ff", "#ffcc00"];
+        
+        // The rotation
+        this.rot = 0.0;
+
+        // Call Method to Initialize:
+        this.init(100);
+    }
+
+            </code></pre>
+            <p>That's all properties we need right now.</p>
+
+            <h3>Initialize</h3>
+            <p>We need to scale the points because the above points are from -0.5 to 0.5</p>
+
+            <pre><code>
+/**
+* @param {Number} the scale for x, y and z
+*/
+init(scl) {
+    let a = this.apo,
+    i;
+
+    // scalling teh points:
+
+    for (i = 0; i < a.length; i += 3) {
+        a[i] *= scl;
+        a[i + 1] *= scl;
+        a[i + 2] *= scl;
+    }
+
+    // Let's rotate it 45 degree by X axis:
+
+    let r = Math.PI / 4;
+    let s = Math.sin(r),
+        c = Math.cos(r),
+        y,
+        z;
+    for (i = 0; i < a.length; i += 3) {
+        y = a[i+1],
+        z = a[i+2];
+        a[i+1] = c * y - s * z;
+        a[i+2] = s * y + c * z;
+    }
+}
+
+            </code></pre>
+
+            <h2>Tick (Every Frame)</h2>
+            <p>Let's create the tick function and call it each frame.</p>
+            <p>We will do several things at once:</p>
+            <ul>
+                <li>Rotatating all points</li>
+                <li>Projecting the points</li>
+                <li>Collecting face data for rendering</li>
+                <li>Sotying faces by calculated z-index, then...</li>
+                <li>Draw it to canvas</li>
+            </ul>
+
+            <h3>Preparation</h3>
+            <ul>
+                <li>a = Add rotation Y by 2 degree (eq.  Math.PI / 90) and save it to a</li>
+                <li>Better to make sure rotation in range between 0 to 260 degree,</li>
+                <li>Calculate sinus and cosinus of new rotation value and save it to c and s.</li>
+                <li>Define maximum distance as d.</li>
+                <li>Inverse d to di for faster calculation</li>
+                <li>Calculate center of the screen and sahe it as w and h</li>
+            </ul>
+            <pre><code>
+
+tick() {
+    
+    this.rot = (this.rot + Math.PI / 90) % (Math.PI * 2);
+    let a = this.apo,
+    b = this.apt,
+    c = Math.cos(this.rot),
+    s = Math.sin(this.rot),
+    d = 200,
+    let di = 1 / d,
+    w = this.cvs.width * 0.5,
+    h = this.cvs.height * 0.5;
+    i,
+    scl;
+
+    // Rotating points at apo (array of points) the save it to apt (array of points transformed):
+
+
+
+            </code></pre>
+
+            <h3>Apply Rotation and Projecting</h3>
+            <p>a   : is alias of apo (array of points.</p>
+            <p>b   : is apt (array of points transformed and projected to save the result.</p>
+            <p>scl : is the scale for adjusting x and y position for each point. this formulation is 1 - the point z divided by di.</p>
+            <p>I can not explain it more. Just see the following script:</p>
+            <pre><code>
+
+    for (i = 0; i < a.length; i += 3) {
+        b[i] = s * a[i + 2] + c * a[i];
+        b[i + 1] = a[i + 1];
+        b[i + 2] = c * a[i + 2] - s * a[i];
+        scl = 1 - b[i + 2] * di;
+        b[i] = w + scl * b[i];
+        b[i + 1] = h - scl * b[i + 1];
+    }
+
+            </code></pre>
+
+            <h3>Collecting render Data</h3>
+            <P>We need afc (Array of Faces and the Coordinate points) asindice to create render data, because - now - we separate points and face to enable optimizin transformation and projecting calculation.</p>
+            <pre><code>
+
+    let afc = this.afc,
+    atr = [],
+    i1,
+    i2,
+    i3,
+    i4;
+    for (i = 0; i < afc.length; i += 4) {
+        i1 = afc[i] * 3;
+        i2 = afc[i + 1] * 3;
+        i3 = afc[i + 2] * 3;
+        i4 = afc[i + 3] * 3;
+        atr.push([
+            atr.length,
+            [b[i1], b[i1 + 1], b[i1 + 2]],
+            [b[i2], b[i2 + 1], b[i2 + 2]],
+            [b[i3], b[i3 + 1], b[i3 + 2]],
+            [b[i4], b[i4 + 1], b[i4 + 2]],
+            (b[i1 + 2] + b[i2 + 2] + b[i3 + 2] + b[i4 + 2]) * 0.25
+        ]);
+    }
+
+            </code></pre>
+
+            <h3>Sorting Render Data</h3>
+            <p>Will will sort each face by it'z average z-position to avoid unwanted overlapping face. I's simple, just write:</p>
+            <p>atr.sort(this.sortZ);</p>
+            <p>Here is the separated function to compare each face:</p>            
+            <pre><code>
+
+sortZ (a, b) {
+    return a[5] == b[5] ? 0 : a[5] > b[5] ? 1 : -1;
+}
+
+            </code></pre>
+
+            <h3>Drawing</h3>
+            <p>Now we can draw each face like this:</p>
+            <pre><code>
+
+        // Clear the canvas:
+        this.ctx.clearRect(0, 0, this.cvs.width, this.cvs.height);
+
+        // Save the context and prepare style to apply:
+        this.ctx.save();
+        this.ctx.lineWidth = 2
+        this.ctx.strokeStyle = "#ffffff";
+
+        // Draw each face:
+        let o;
+        while (atr.length > 0) {
+            o = atr.pop();
+
+            // Drawing the path:
+            this.ctx.beginPath();
+            this.ctx.moveTo(o[1][0], o[1][1]);
+            this.ctx.lineTo(o[2][0], o[2][1]);
+            this.ctx.lineTo(o[3][0], o[3][1]);
+            this.ctx.lineTo(o[4][0], o[4][1]);
+            this.ctx.closePath();
+
+            // Apply spesific fill style then fill
+            this.ctx.globalAlpha = 0.8;
+            this.ctx.fillStyle = this.colors[o[0]];
+            this.ctx.fill();
+
+            // Reset globalAlpha, apply stroke style then draw the border:
+            this.ctx.globalAlpha = 1.0;
+            this.ctx.stroke();
+
+            // Just to optimize garbage collection:
+            o.length = 0;
+        }
+
+        // End drawing by restoring the drawing context
+        this.ctx.restore();
+
+            </code></pre>
+
+        <h3>Request Next Frame</h3>
+        <p>End the function (method) by requesting next frame:</p>
+        <pre><code>
+
+    window.requestAnimationFrame((o) => {
+        this.tick();
+    });
+}
+
+        </code></pre>
+        <p>Thta's all for 3D in one simple class</p>
+
+        <h3>Create when windows loaded by</h3>
+        <pre><code>
+
+window.onload = function (e) {
+    let demo = new Lesson1(document.getElementById("cvs"));
+    window.requestAnimationFrame((o) => {
+        demo.tick();
+    });
+};
+
+        </code></pre>
+        <p>I hope you enjoy it ...</p>
+        <p>C U</p>
+        </main>
+        <footer></footer>
+    </body>
+</html>

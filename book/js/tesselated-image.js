@@ -1,4 +1,9 @@
 class Point {
+    /**
+     * 
+     * @param {Number} x Position x 
+     * @param {Number} y Position y
+     */
     constructor(x, y) {
         this.x = x || 0.0;
         this.y = y || 0.0;
@@ -6,6 +11,11 @@ class Point {
     }
 }
 class UV {
+    /**
+     * 
+     * @param {Number} u Position x in image
+     * @param {Number} v Position y in image
+     */
     constructor(u, v) {
         this.u = u;
         this.v = v;
@@ -25,10 +35,12 @@ class Triangle {
         this.points = [p0, p1, p2];
         this.uvs = [uv0, uv1, uv2];
     }
+    /**
+     * @return {Number} z The agerage z-depth, need for sorting
+     */
     get z() {
         return ((this.points[0].z + this.points[1].z + this.points[2].z) / 3);
     }
-
 }
 class Circle {
     /**
@@ -42,6 +54,10 @@ class Circle {
         this.y = y;
         this.radius = r || 8;
     }
+    /**
+     * Drawing it-self to a canvas, thought this time we don't need to sort
+     * @param {CanvasRenderingContext2d} ctx 
+     */
     draw (ctx) {
         ctx.beginPath();
         ctx.arc(this.x, this.y, 8, 0, Math.PI * 2);
@@ -50,7 +66,7 @@ class Circle {
         ctx.stroke();
     }
 }
-class DistortImage {
+class TesselatedImage {
     /**
      * 
      * @param {image} image for texture
@@ -74,8 +90,8 @@ class DistortImage {
         this.needDraw = true;
     }
     /**
-     * 
-     * @param {CanvasContext2d} ctx 
+     * Request it-self to draw each Triangle
+     * @param {CanvasRenderingContext2d} ctx 
      */
     draw(ctx) {
         // Clear canvas
@@ -103,7 +119,7 @@ class DistortImage {
         this.needDraw = false;
     }
     /**
-     * 
+     * Request each Circle to draw
      * @param {CanvasContext2d} ctx 
      */
     drawCircles(ctx) {
@@ -117,7 +133,7 @@ class DistortImage {
         }
     }
     /**
-     * 
+     * Drawing a TRiangle
      * @param {CanvasRenderingContext2d} ctx 
      * @param {image} im 
      * @param {Float} x0 
@@ -141,9 +157,10 @@ class DistortImage {
             _n = u1 - u2,
             det = u0 * _m - _k + _l + _n * v0;
         if (det == 0) {
-            //console.log("Error: det = " + det);
+            //Do not draw it
             return;
         }
+        // Prepare transformation matrix for canvas
         det = 1 / det;
         let _o = x2 - x1,
             _p = y1 - y2,
@@ -162,23 +179,24 @@ class DistortImage {
             b = (v0 * _p + _v - _w + _m * y0) * det,
             e = (u0 * (_s - _r) + v0 * (_x - _y) + _q * x0) * det,
             f = (u0 * (_w - _v) + v0 * (_t - _u) + _q * y0) * det;
-        // save drawing context
+        // save the context
         ctx.save();
-        // draw path
+        // draw the Triangle path
         ctx.beginPath();
         ctx.moveTo(x0, y0);
         ctx.lineTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.closePath();
-        // draw image
+        // Clip the image using the path
         ctx.clip();
+        // draw the image
         ctx.transform(a, b, c, d, e, f);
         ctx.drawImage(im, 0, 0);
-        // restore drawing context
+        // restore the context
         ctx.restore();
     }
     /**
-     * 
+     * Generate Triangles including the Uvs
      * @param {Float} w width
      * @param {Float} h height
      * @param {Integer} segX segment x
@@ -255,7 +273,7 @@ class DistortImage {
         this.needDraw = true;
     }
     /**
-     * 
+     * Check if a Circle under the mouse and record it to enable dragging
      * @param {Point} p Current ouse position
      */
     handleMouseDown(p) {
@@ -270,7 +288,7 @@ class DistortImage {
         }
     }
     /**
-     * 
+     * If a Circle under the mouse, drag it
      * @param {Point} p Current ouse position
      */
     handleMouseMove(p) {
@@ -281,7 +299,7 @@ class DistortImage {
         }
     }
     /**
-     * 
+     * Release Circle
      * @param {Point} p Current ouse position
      */
     handleMouseUp(p) {
@@ -290,7 +308,7 @@ class DistortImage {
         }
     }
     /**
-     * 
+     * Recalculate the points position based on Circles position.
      * @param {Circle} p1 Circle 1
      * @param {Circle} p2 Circle 2
      * @param {Circle} p3 Circle 3
@@ -331,7 +349,7 @@ class DistortImage {
         }
     }
     /**
-     * 
+     * Change the size. We need it when canvas size change
      * @param {Number} w width 
      * @param {Number} h height
      */
@@ -342,19 +360,22 @@ class DistortImage {
         needDraw = true;
     }
     /**
-     * 
+     * Updateting
      * @param {CanvasContext2d} ctx 
      */
     update(ctx) {
+        // Only recalculate position when a Circle position change
         this.recalcPoints(
             this.circles[0],
             this.circles[1],
             this.circles[2],
             this.circles[3]
         );
+        // Request it-self to draw
         this.draw(ctx);
     }
 }
+
 class MyApp {
     /**
      * 
@@ -368,13 +389,13 @@ class MyApp {
         // Create Image for texture
         let image = new Image();
         // Create DistortImage
-        this.di = new DistortImage(image, 8, 8);
+        this.tI = new TesselatedImage(image, 8, 8);
         // Create point for saving mouse position
         this.mousePos = new Point();
         // when the image loaded
         image.addEventListener("load", (e) => {
             // ask DistortImage to generate triangles
-            this.di.generate(
+            this.tI.generate(
                 this.cvs.width - 48, this.cvs.height - 48,
                 this.segX, this.segY
             );
@@ -385,19 +406,19 @@ class MyApp {
         image.src = imagesrc;
         // mouse events:
         this.cvs.addEventListener("mousedown", (e) => {
-            this.di.handleMouseDown(this.getMousePosition(e));
+            this.tI.handleMouseDown(this.getMousePosition(e));
         });
         this.cvs.addEventListener("mousemove", (e) => {
-            this.di.handleMouseMove(this.getMousePosition(e));
+            this.tI.handleMouseMove(this.getMousePosition(e));
         });
         this.cvs.addEventListener("mouseup", (e) => {
-            this.di.handleMouseUp(this.getMousePosition(e));
+            this.tI.handleMouseUp(this.getMousePosition(e));
         });
         /*
         window.addEventListener("resize", (e) => {
             this.cvs.width = window.innerWidth - 64;
             this.cvs.height = window.innerHeight - 64;
-            this.di.resize (this.cvs.width, this.cvs.height);
+            this.tI.resize (this.cvs.width, this.cvs.height);
         });
         */
     }
@@ -423,7 +444,7 @@ class MyApp {
     // update the DistortImage
     // then request next frame
     step() {
-        this.di.update(this.ctx);
+        this.tI.update(this.ctx);
         this.anim = window.requestAnimationFrame(() => {
             this.step();
         });

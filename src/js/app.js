@@ -1,6 +1,28 @@
+/**
+ * Global constants
+ */
 const RAD1 = Math.PI / 180;
 const DEG1 = 180 / Math.PI;
+/**
+ * Class App3D - The Engine
+ * @property {canvas} canvas
+ * @property {CanvasRenderingContext2d} ctx
+ * @property {Float32Array(3)} fnf Represent Fov, Near and Far
+ * @property {Camera} cam
+ * @property {Node} world Root of all nodes
+ * @property {Float32Array(16)} matVP Matrix of viewport
+ * @property {Float32Array(16)} matP Matrix of projection
+ * @property {Float32Array(16)} matC Matrix of camera
+ * @property {Float32Array(16)} matG The global matrix
+ * @property {Float32Array(16)} matTemp Matrix for temporary calculation
+ * @property {Booleab} _dirty Sign to update matrix
+ * @property {Booleab} wireframe Sign for wire-frame mode
+ */
 class App3D {
+    /**
+     * 
+     * @param {Canvas} canvas 
+     */
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
@@ -35,12 +57,27 @@ class App3D {
     set Far(n) { this.fnf[2] = n; this.updateMatP(); }
     set Fov(n) { this.fnf[0] = n; this.updateMatP(); }
     set Near(n) { this.fnf[1] = n; this.updateMatP(); }
+    /**
+     * 
+     * @param {Float} f Fov
+     * @param {Float} n Near
+     * @param {Float} r Far
+     */
     setFovNearFar(f, n, r) {
         this.fnf[0] = f;
         this.fnf[1] = n;
         this.fnf[2] = r;
         this.updateMatP();
     }
+    /**
+     * Drawing (rendering)
+     * - Request render data to world
+     * - Sorting render data
+     * - Clear the canvas
+     * - Draw triangles
+     * - - Prepare texture matrix for trianggle
+     * - - Draw the triangle to this.ctx (CanvasRenderingContext2d)
+     */
     draw() {
         let renderData = [];
         this.world.collectRenderData(renderData);
@@ -97,6 +134,9 @@ class App3D {
             ctx.restore();
         }
     }
+    /**
+     * Updating camera matrix
+     */
     updateMatC() {
         let z0 = this.cam.x - this.cam.targetX,
             z1 = this.cam.y - this.cam.targetY,
@@ -136,6 +176,9 @@ class App3D {
         this.matC[15] = 1;
         this.cam.dirty = false;
     }
+    /**
+     * Updating neccessary matrice
+     */
     updateMatrix() {
         if (this.dirty) {
             if (this.cam.dirty) {
@@ -147,6 +190,9 @@ class App3D {
         }
         this.world.updateMatrix(this.matG);
     }
+    /**
+     * Updating projection matrix
+     */
     updateMatP() {
         let asp = this.canvas.width / this.canvas.height,
             f = 1.0 / Math.tan(this.Fov / 2);
@@ -166,21 +212,40 @@ class App3D {
         this.matP[12] = this.matP[13] = this.matP[15] = 0;
         this._dirty = true;
     }
+    /**
+     * Updating viewport matrix
+     */
     updateMatVP() {
         this.matVP[0] = this.matVP[12] = this.canvas.width / 2;
         this.matVP[5] = this.matVP[13] = this.canvas.height / 2;
         this._dirty = true;
     }
+    /**
+     * Resize this.canvas
+     * @param {Float} w New canvas Width
+     * @param {Float} h New Canvas Height
+     */
     resize(w, h) {
         this.canvas.width = w;
         this.canvas.height = h;
         this.updateMatVP();
     }
+    /**
+     * request to update matrix and draw
+     */
     step() {
         this.updateMatrix();
         this.draw();
     }
     static instance = undefined;
+    /**
+     * 
+     * @param {*} m Index of material
+     * @param {*} a Index of point 1
+     * @param {*} b Index of point 2
+     * @param {*} c Index of point 3
+     * @return {Floar32Array(4)}
+     */
     static createIndice(m, a, b, c) {
         let p = new Uint8Array(4);
         p[0] = m;
@@ -189,6 +254,11 @@ class App3D {
         p[3] = c;
         return p;
     }
+    /**
+     * 
+     * @param {Array} a Optional values
+     * @return {Float32Array(16)}
+     */
     static createMatrix(a) {
         let m = new Float32Array(16);
         if (a) {
@@ -203,6 +273,13 @@ class App3D {
         }
         return m;
     }
+    /**
+     * 
+     * @param {Float} x Coordinate x
+     * @param {Float} y Coordinate y
+     * @param {Float} z Coordinate x
+     * @return {Float32Array(3)}
+     */
     static createPoint(x, y, z) {
         let p = new Float32Array(3);
         p[0] = x;
@@ -210,9 +287,20 @@ class App3D {
         p[2] = z;
         return p;
     }
+    /**
+     * 
+     * @param {*} image 
+     * @return {TextureMaterial}
+     */
     static createTexture(image) {
         return new TextureMaterial(image);
     }
+    /**
+     * 
+     * @param {Float} u Texture coordinate x
+     * @param {Float} v Texture coordinate y
+     * @return {Float32Array(2)}
+     */
     static createUV(u, v) {
         let p = new Float32Array(2);
         p[0] = u;
@@ -228,6 +316,11 @@ class App3D {
     static cloneUV(uv) {
         return this.createUV(uv[0], uv[1]);
     }
+    /**
+     * Compose a Node Local Matrix at once
+     * @param {Node} node 
+     * @return {Float32Array(16)} The node local matrix
+     */
     static composeNodeMatrix(node) {
         let q = App3D.eulerToQuat(node.rotationX, node.rotationY, node.rotationZ);
         let x = q[0],
@@ -292,10 +385,24 @@ class App3D {
         }
         return ret;
     }
+    /**
+     * Culling Triangle
+     * @param {Float32Array(3)} p0 
+     * @param {Float32Array(3)} p1 
+     * @param {Float32Array(3)} p2 
+     * @return {Boolean}
+     */
     static cullTriangle(p0, p1, p2) {
         let q = (p0[0] * p1[1] - p1[0] * p0[1]) + (p1[0] * p2[1] - p2[0] * p1[1]) + (p2[0] * p0[1] - p0[0] * p2[1]);
         return q < 0;
     }
+    /**
+     * @internal
+     * @param {Float} x Rotation x in degree
+     * @param {Float} y Rotation y in degree
+     * @param {Float} z Rotation z in degree
+     * @param {Array(4)} out Optional
+     */
     static eulerToQuat(x, y, z, out) {
         let hr = 0.5 * Math.PI / 180;
         let rx = x * hr,
@@ -314,6 +421,12 @@ class App3D {
         c[3] = cx * cy * cz + sx * sy * sz;
         return c;
     }
+    /**
+     * 
+     * @param {Float32Array(16)} out Optional to save output
+     * @param {Float32Array(16)} a The First Matrix
+     * @param {Float32Array(16)} b The Second Matrix
+     */
     static multiplyMatrix(out, a, b) {
         let c = out || Float32Array(16);
         c[0] = b[0] * a[0] + b[1] * a[4] + b[2] * a[8] + b[3] * a[12];
@@ -334,6 +447,11 @@ class App3D {
         c[15] = b[12] * a[3] + b[13] * a[7] + b[14] * a[11] + b[15] * a[15];
         return c;
     }
+    /**
+     * Rotating an array of points by x axiz
+     * @param {Array} a Array of Points
+     * @param {Float} rad ngle in radian
+     */
     static rotatePointsX(a, rad) {
         let s = Math.sin(rad),
             c = Math.cos(rad),
@@ -345,6 +463,11 @@ class App3D {
             a[i][2] = s * y + c * z;
         }
     }
+    /**
+     * Rotating an array of points by y axiz
+     * @param {Array} a Array of Points
+     * @param {Float} rad ngle in radian
+     */
     static rotatePointsY(a, rad) {
         let s = Math.sin(rad),
             c = Math.cos(rad),
@@ -356,6 +479,11 @@ class App3D {
             a[i][2] = -s * x + c * z;
         }
     }
+    /**
+     * Rotating an array of points by z axiz
+     * @param {Array} a Array of Points
+     * @param {Float} rad ngle in radian
+     */
     static rotatePointsZ(a, rad) {
         let s = Math.sin(rad),
             c = Math.cos(rad),
@@ -367,6 +495,13 @@ class App3D {
             a[i][1] = s * x + c * y;
         }
     }
+    /**
+     * Scale an array of points
+     * @param {Array} a Array of points
+     * @param {Float} sx Scale x
+     * @param {Float} sy Scale y
+     * @param {Float} sz Scale z
+     */
     static scalePoints(a, sx, sy, sz) {
         for (let i = 0; i < a.length; i++) {
             a[i][0] *= sx;
@@ -374,6 +509,12 @@ class App3D {
             if (sz) a[i][2] *= sz;
         }
     }
+    /**
+     * Transform an array of points 
+     * @param {Float32Array(16)} m The matrix
+     * @param {Array} a Array of points
+     * @param {Array} out Optional to ssave the result
+     */
     static transformPoints(m, a, out) {
         if (!out) out = [];
         let i, p, w;
@@ -390,225 +531,18 @@ class App3D {
         }
         return out;
     }
+    /**
+     * Add position of an array of points
+     * @param {Array} a Array of points
+     * @param {Float} x Added value x
+     * @param {Float} y Added value y
+     * @param {Float} z Added value y
+     */
     static translatePoints(a, x, y, z) {
         for (let i = 0; i < a.length; i++) {
             a[i][0] += x;
             a[i][1] += y;
             a[i][2] += z;
-        }
-    }
-}
-class Camera {
-    constructor() {
-        this.pos = App3D.createPoint(0, 0, -600);
-        this.tgt = App3D.createPoint(0, 0, 0);
-        this.up = App3D.createPoint(0, 1, 0);
-        this.dirty = true;
-    }
-    get x() { return this.pos[0]; }
-    get y() { return this.pos[1]; }
-    get z() { return this.pos[2]; }
-    set x(n) { this.pos[0] = n; this.dirty = true; }
-    set y(n) { this.pos[1] = n; this.dirty = true; }
-    set z(n) { this.pos[2] = n; this.dirty = true; }
-    setPosition(x, y, z) {
-        this.dirty = true;
-        this.pos[0] = x;
-        this.pos[1] = y;
-        this.pos[2] = z;
-    }
-    get targetX() { return this.tgt[0]; }
-    get targetY() { return this.tgt[1]; }
-    get targetZ() { return this.tgt[2]; }
-    set targetX(n) { this.tgt[0] = n; this.dirty = true; }
-    set targetY(n) { this.tgt[1] = n; this.dirty = true; }
-    set targetZ(n) { this.tgt[2] = n; this.dirty = true; }
-    setTarget(x, y, z) {
-        this.dirty = true;
-        this.tgt[0] = x;
-        this.tgt[1] = y;
-        this.tgt[2] = z;
-    }
-    get upX() { return this.up[0]; }
-    get upY() { return this.up[1]; }
-    get upZ() { return this.up[2]; }
-    get headX() { return this.up[0]; }
-    get headY() { return this.up[1]; }
-    get headZ() { return this.up[2]; }
-    set headX(n) { this.up[0] = n; this.dirty = true; }
-    set headY(n) { this.up[1] = n; this.dirty = true; }
-    set headZ(n) { this.up[2] = n; this.dirty = true; }
-    setHead(x, y, z) {
-        this.dirty = true;
-        this.up[0] = x;
-        this.up[1] = y;
-        this.up[2] = z;
-    }
-    translate(x, y, z) {
-        this.dirty = true;
-        this.pos[0] += x;
-        this.pos[1] += y;
-        this.pos[2] += z;
-    }
-}
-class ColorMaterial {
-    constructor(bg, bordercolor, borderwidth) {
-        this.backgroundColor = bg;
-        this.borderColor = bordercolor;
-        this.borderWidth = borderwidth;
-    }
-}
-class TextureMaterial {
-    constructor(img) {
-        this.image = img;
-    }
-}
-class Node {
-    constructor() {
-        this.isModel = false;
-        this.pos = App3D.createPoint(0, 0, 0);
-        this.rot = App3D.createPoint(0, 0, 0);
-        this.scl = App3D.createPoint(1, 1, 1);
-        this.matL = App3D.createMatrix();
-        this.matG = App3D.createMatrix();
-        this.dirty = true;
-        this.parent = null;
-        this.children = [];
-    }
-    get x() { return this.pos[0]; }
-    get y() { return this.pos[1]; }
-    get z() { return this.pos[2]; }
-    set x(n) { this.pos[0] = n; this.dirty = true; }
-    set y(n) { this.pos[1] = n; this.dirty = true; }
-    set z(n) { this.pos[2] = n; this.dirty = true; }
-    get rotationX() { return this.rot[0]; }
-    get rotationY() { return this.rot[1]; }
-    get rotationZ() { return this.rot[2]; }
-    set rotationX(n) { this.rot[0] = n; this.dirty = true; }
-    set rotationY(n) { this.rot[1] = n; this.dirty = true; }
-    set rotationZ(n) { this.rot[2] = n; this.dirty = true; }
-    get scaleX() { return this.scl[0]; }
-    get scaleY() { return this.scl[1]; }
-    get scaleZ() { return this.scl[2]; }
-    set scaleX(n) { this.scl[0] = n; this.dirty = true; }
-    set scaleY(n) { this.scl[1] = n; this.dirty = true; }
-    set scaleZ(n) { this.scl[2] = n; this.dirty = true; }
-    appendChild(node) {
-        if (this.children.indexOf(node) < 0) {
-            node.parent = this;
-            this.children.push(node);
-        }
-    }
-    clear() {
-        while (this.children.length > 0) {
-            this.children.pop().parent = null;
-        }
-    }
-    collectRenderData(collection) {
-        if (this.children.length > 0) {
-            for (let i = 0; i < this.children.length; i++) {
-                this.children[i].collectRenderData(collection);
-            }
-        }
-    }
-    removeChild(node) {
-        let i = this.children.indexOf(node);
-        if (i < 0) return false;
-        node.parent = null;
-        this.children.splice(i, 1);
-        return true;
-    }
-    rotate(x, y, z) {
-        if (x != 0) this.rotationX = (this.rotationX + x) % 360;
-        if (y != 0) this.rotationY = (this.rotationY + y) % 360;
-        if (z != 0) this.rotationZ = (this.rotationZ + z) % 360;
-    }
-    scale(x, y, z) {
-        if (x != 0) this.scaleX = x;
-        if (y != 0) this.scaleY = y;
-        if (z != 0) this.scaleZ = z;
-    }
-    translate(x, y, z) {
-        if (x != 0) this.x += x;
-        if (y != 0) this.y += y;
-        if (z != 0) this.z += z;
-    }
-    updateMatrix(mat) {
-        if (this.dirty) {
-            App3D.composeNodeMatrix(this);
-            this.dirty = false;
-        }
-        App3D.multiplyMatrix(this.matG, mat, this.matL);
-        this.updateMore();
-        if (this.children.length > 0) {
-            for (let ni = 0; ni < this.children.length; ni++) {
-                this.children[ni].updateMatrix(this.matG);
-            }
-        }
-    }
-    updateMore() { }
-}
-class Model extends Node {
-    constructor(mat, ap, au, ai) {
-        super();
-        this.doubleSide = false;
-        this.isModel = true;
-        this.indice = ai || [];
-        this.materials = mat || [];
-        this.points = ap || [];
-        this.pointsP = [];
-        this.uvs = au || [];
-        if (this.points.length > 0) {
-            for (let i = 0; i < this.points.length; i++) {
-                this.pointsP.push(App3D.createPoint(0, 0, 0));
-            }
-        }
-    }
-    addIndice(m, a, b, c) {
-        this.indice.push(App3D.createIndice(m, a, b, c));
-    }
-    addPoint(x, y, z) {
-        this.points.push(App3D.createPoint(x, y, z));
-        this.pointsP.push(App3D.createPoint(0, 0, 0));
-    }
-    addUV(u, v) {
-        this.uvs.push(App3D.createUV(u, v));
-    }
-    clone() {
-        let am = App3D.copyArray(this.materials);
-        let ap = App3D.copyArrayPoint(this.points);
-        let au = App3D.copyArrayUV(this.uvs);
-        let ai = App3D.copyArrayIndice(this.indice);
-        let mo = new Model(am, ap, au, ai);
-        mo.doubleSide = this.doubleSide;
-        return mo;
-    }
-    collectRenderData(collection) {
-        let ap = this.pointsP,
-            au = this.uvs,
-            ai = this.indice,
-            am = this.materials,
-            ds = this.doubleSide;
-        for (let i = 0; i < ai.length; i++) {
-            let t = ai[i];
-            if (ds || App3D.cullTriangle(ap[t[1]], ap[t[2]], ap[t[3]])) {
-                collection.push([
-                    am[t[0]].image,
-                    ap[t[1]], ap[t[2]], ap[t[3]],
-                    au[t[1]], au[t[2]], au[t[3]]
-                ]);
-            }
-        }
-        if (this.children.length > 0) {
-            for (let i = 0; i < this.children.length; i++) {
-                this.children[i].collectRenderData(collection);
-            }
-        }
-    }
-    updateMore() {
-        if (this.points.length > 0) {
-            this.pointsP.length = 0;
-            this.pointsP = App3D.transformPoints(this.matG, this.points, this.pointsP);
         }
     }
 }

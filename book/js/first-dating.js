@@ -87,7 +87,6 @@ class Lesson1 {
 		this.ctx.lineWidth = 2
 		this.ctx.strokeStyle = "#ffffff";
         let o;
-		i = 0;
         while (atr.length > 0) {
             o = atr.pop();
             this.ctx.beginPath();
@@ -101,7 +100,6 @@ class Lesson1 {
 			this.ctx.fill();
 			this.ctx.globalAlpha = 1.0;
             this.ctx.stroke();
-			i++;
 			o.length = 0;
         }
         this.ctx.restore();
@@ -110,7 +108,6 @@ class Lesson1 {
         });
     }
 }
-
 window.onload = function (e) {
     let demo = new Lesson1(document.getElementById("cvs"));
     window.requestAnimationFrame((o) => {

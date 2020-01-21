@@ -1,0 +1,72 @@
+* {
+    box-sizing: border-box;
+}
+html {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color : rgb(0, 0, 0);
+    background-color: rgb(226, 226, 226);
+    margin:0;
+    padding:0;
+}
+body {
+    margin:auto;
+    padding: 1em;
+}
+header, main, footer {
+    display: block;
+    clear: both;
+}
+.center {
+    text-align: center;
+}
+#box11, #box12, #box21, #box22 {
+    display: inline-block;
+    vertical-align: top;
+    margin: 0;
+}
+#box12, #box22 {
+    float:right;
+}
+#box21, #box22 {
+    overflow: auto;
+    border: solid 1px #cccccc;
+}
+#box21 {
+    width: 250px;
+    padding: 1em;
+}
+#frame {
+    margin:0;
+    padding:1em;
+}
+
+.ac-main,
+.ac-head,
+.ac-head-text
+.ac-head-text-exp,
+.ac-cont,
+.ac-item {
+    width:100%;
+    margin:0;
+}
+.ac-con {
+    padding-left: 1em;
+}
+.ac-item,
+.ac-head-text {
+    padding-left: 1em;
+    padding-top: 0.25em;
+    padding-right: 0.25em;
+    padding-bottom: 0.25em;
+    border-top: solid 1px rgb(170, 170, 170);
+    background-color: rgb(211, 211, 211);
+    user-select: none;
+} 
+.ac-item:hover,
+.ac-head-text:hover {
+    background-color: rgb(198, 223, 255);
+}
+.ac-item:active,
+.ac-head-text:active {
+    background-color: rgb(179, 190, 204);
+}

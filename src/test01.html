@@ -20,7 +20,6 @@
          border: solid 1px #303030;
      }
      </style>
-	 <!-- =<script type="text/javascript" src="images/myimage.js"></script> -->
     <script type="text/javascript" src="js/App3D.js"></script>
     <script type="text/javascript">
         
@@ -116,14 +115,14 @@
             let tex = App3D.createTexture(myimg);
             
             let myNode = new Node();
-            myNode.translate(200, 0, 100);
+            myNode.move(200, 0, 100);
             app.world.appendChild(myNode);
 
             let pln1 = createPlane(tex, 150, 100);
             pln1.doubleSide = true;
             let pln2 = pln1.clone();
-            pln1.translate(0, 0, -100);
-            pln2.translate(0, 0, 50);
+            pln1.move(0, 0, -100);
+            pln2.move(0, 0, 50);
             myNode.appendChild(pln1);
             myNode.appendChild(pln2);
             
@@ -164,11 +163,6 @@
                 start (myimg);
             });
 			start (myimg);
-			// testing base64:
-			/*
-			let i = getMyImage();
-			start(i);
-			*/
         };
     </script>
  </head>
